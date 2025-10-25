@@ -42,3 +42,33 @@ Invoke-RestMethod -Uri http://localhost:4000/api/weather/all -Headers @{ Authori
 7) Notes & security
 - Keep DEV_AUTH_BYPASS=false for submission. Use it only for local debugging.
 - Do not commit `.env` to your repository.
+
+8) Submission checklist (required for reviewers)
+- Ensure `backend/.env` has `DEV_AUTH_BYPASS=false` (or remove the flag) before submission.
+- Set `AUTH0_DOMAIN` and `AUTH0_AUDIENCE` to match your Auth0 tenant and API Identifier.
+- Confirm the test user `careers@fidenz.com` exists in your Auth0 tenant or document how the reviewer can log in.
+
+9) Quick verification commands
+- Root status (should return a JSON object):
+  ```powershell
+  Invoke-RestMethod -Uri http://localhost:4000
+  ```
+
+- Debug Authorization header (dev only - requires DEV_AUTH_BYPASS=true):
+  ```powershell
+  Invoke-RestMethod -Uri http://localhost:4000/api/weather/debug-auth -Headers @{ Authorization = 'Bearer dev-token' }
+  ```
+
+- Fetch all weather (dev-token or real token):
+  ```powershell
+  # dev mode
+  Invoke-RestMethod -Uri http://localhost:4000/api/weather/all -Headers @{ Authorization = 'Bearer dev-token' }
+
+  # using a real Auth0 access token (replace <token>)
+  Invoke-RestMethod -Uri http://localhost:4000/api/weather/all -Headers @{ Authorization = 'Bearer <token>' }
+  ```
+
+10) Recommended final steps before emailing reviewers
+- Disable `DEV_AUTH_BYPASS` and `DEV_DEBUG` in `backend/.env`.
+- Verify that `/api/weather/all` returns a 200 only when a valid Auth0 access token is provided (or document if the API uses mock data when OPENWEATHER_API_KEY is missing).
+- Remove or comment-out any debug-only routes if you prefer not to expose them.

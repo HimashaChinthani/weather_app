@@ -68,7 +68,7 @@ export default function App(){
           </>
         )}
       </main>
-      <footer className="footer">Responsive design: try mobile widths</footer>
+      <footer className="footer">Fidenz Weather — Demo build. Data by OpenWeatherMap. Login required to view live data. See README for setup.</footer>
     </div>
   );
 }

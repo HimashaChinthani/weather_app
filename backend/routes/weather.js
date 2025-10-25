@@ -81,6 +81,18 @@ const authMiddlewareUsed = (req, res, next) => {
   return next();
 };
 
+// Optional scope/role checker middleware. Enable by setting REQUIRE_SCOPE=true and
+// provide the required scope via the environment variable REQUIRED_SCOPE (e.g. 'read:weather')
+const requireScope = (scope) => (req, res, next) => {
+  if (!process.env.REQUIRE_SCOPE || process.env.REQUIRE_SCOPE !== 'true') return next();
+  const user = req.user || {};
+  // support both scope in token (space-delimited) and custom roles claim
+  const tokenScopes = (user.scope || '').split(' ').filter(Boolean);
+  const roles = user['https://fidenz.com/roles'] || user.roles || [];
+  if (tokenScopes.includes(scope) || roles.includes(scope)) return next();
+  return res.status(403).json({ error: 'insufficient_scope', description: `Requires scope ${scope}` });
+};
+
 // GET all cities weather (protected)
 router.get('/all', authMiddlewareUsed, async (req, res) => {
   try {
@@ -119,13 +131,22 @@ router.get('/all', authMiddlewareUsed, async (req, res) => {
     const resultsResolved = await Promise.all(promises);
     res.json(resultsResolved);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch weather' });
+    // If the error stems from axios and includes a response, forward the status & message
+    console.error('Error in /all:', err && err.message);
+    if (err && err.response) {
+      const status = err.response.status || 500;
+      const body = err.response.data || { error: err.message };
+      return res.status(status).json({ error: 'upstream_error', details: body });
+    }
+    res.status(500).json({ error: 'Failed to fetch weather', details: err && err.message });
   }
 });
 
 // Debug endpoint to inspect Authorization header and decoded user (useful while debugging auth)
 router.get('/debug-auth', (req, res) => {
+  // Only expose debug endpoint in non-production dev scenarios when dev bypass is enabled
+  const isDev = process.env.NODE_ENV !== 'production' && process.env.DEV_AUTH_BYPASS === 'true';
+  if (!isDev) return res.status(404).json({ error: 'not_found' });
   res.json({
     authorization: req.headers.authorization || null,
     user: req.user || null,
