@@ -1,0 +1,7 @@
+.container{font-family:Arial,Helvetica,sans-serif;padding:16px}
+.header{display:flex;justify-content:space-between;align-items:center}
+.grid{display:flex;flex-wrap:wrap;gap:12px}
+.card{border:1px solid #ddd;padding:12px;border-radius:6px;width:200px}
+.center{text-align:center;margin-top:20px}
+.footer{margin-top:24px;color:#666}
+.user{margin-right:8px}
