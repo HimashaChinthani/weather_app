@@ -32,15 +32,18 @@ export default function App(){
   return (
     <div className="container">
       <header className="header">
-        <h1>Fidenz Weather</h1>
-        <div>
+        <div className="brand">
+          <div className="logo">FW</div>
+          <h1 className="title">Fidenz Weather</h1>
+        </div>
+        <div className="actions">
           {isAuthenticated ? (
             <>
               <span className="user">Hi, {user?.name || user?.email}</span>
-              <button onClick={() => logout({ returnTo: window.location.origin })}>Logout</button>
+              <button className="btn" onClick={() => logout({ returnTo: window.location.origin })}>Logout</button>
             </>
           ) : (
-            <button onClick={() => loginWithRedirect()}>Login</button>
+            <button className="btn btn-primary" onClick={() => loginWithRedirect()}>Login</button>
           )}
         </div>
       </header>
@@ -54,7 +57,7 @@ export default function App(){
 
         {isAuthenticated && (
           <>
-            <button onClick={fetchAll} disabled={loading}>Refresh</button>
+            <button className="btn btn-primary" onClick={fetchAll} disabled={loading}>Refresh</button>
             <div className="grid">
               {loading && <p>Loading...</p>}
               {weathers.map(w => <WeatherCard key={w.id} weather={w} />)}
