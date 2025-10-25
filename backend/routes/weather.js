@@ -124,6 +124,15 @@ router.get('/all', authMiddlewareUsed, async (req, res) => {
   }
 });
 
+// Debug endpoint to inspect Authorization header and decoded user (useful while debugging auth)
+router.get('/debug-auth', (req, res) => {
+  res.json({
+    authorization: req.headers.authorization || null,
+    user: req.user || null,
+    devBypass: process.env.DEV_AUTH_BYPASS === 'true'
+  });
+});
+
 // GET single city (protected)
 router.get('/:id', authMiddlewareUsed, async (req, res) => {
   const id = req.params.id;
