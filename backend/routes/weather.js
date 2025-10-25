@@ -161,6 +161,20 @@ router.get('/:id', authMiddlewareUsed, async (req, res) => {
 
   const cached = cache.get(id);
   if (cached) return res.json(cached);
+  // If we don't have an OpenWeather API key available, return a mock response using cities.json
+  if (!process.env.OPENWEATHER_API_KEY) {
+    const info = cityMap[id] || {};
+    const tempC = info.Temp ? Math.round(Number(info.Temp)) : null;
+    const out = {
+      id,
+      name: info.CityName || info.name || 'Unknown',
+      description: info.Status || null,
+      tempKelvin: tempC !== null ? Math.round((tempC + 273.15) * 100) / 100 : null,
+      tempC
+    };
+    cache.set(id, out);
+    return res.json(out);
+  }
 
   try {
     const url = `https://api.openweathermap.org/data/2.5/weather?id=${id}&appid=${process.env.OPENWEATHER_API_KEY}`;
