@@ -1,6 +1,5 @@
-# Fidenz Weather App — Full Stack Assignment
+# Weather App 
 
-This repository contains a small full-stack weather application built to satisfy the Fidenz assignment requirements (Part 1: Weather API + UI; Part 2: Authentication & Authorization).
 
 Overview
 - Backend: Express API that loads city codes from `backend/data/cities.json`, fetches weather from OpenWeatherMap (or uses local mock data), and caches responses for 5 minutes.
@@ -42,14 +41,3 @@ Auth0 setup notes (high level)
 - Disable public signups in your Auth0 database connection and pre-create the test user `careers@fidenz.com` (Pass#fidenz) as requested by the assignment.
 - Enable MFA (email or other) in the Auth0 dashboard as part of the assignment.
 
-Submission checklist
-1. Create a GitHub repo and push this project.
-2. Add these users (or make the repo accessible to them):
-   - kanishka.d@fidenz.com
-   - srimal.w@fidenz.com
-   - narada.a@fidenz.com
-   - amindu.l@fidenz.com
-3. Ensure README contains setup instructions (this file).
-4. Email the repository link to the contacts provided.
-
-If you want, I can create a branch, commit these docs, and prepare a clean README or create a small PR. I can also help step you through Auth0 setup and configuring env variables.
