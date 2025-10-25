@@ -37,7 +37,7 @@ export default function App(){
       <header className="header">
         <div className="brand">
           <div className="logo">FW</div>
-          <h1 className="title">Fidenz Weather</h1>
+          <h1 className="title">Weather API</h1>
         </div>
         <div className="actions">
           {isAuthenticated ? (
@@ -60,15 +60,17 @@ export default function App(){
 
         {isAuthenticated && (
           <>
-            <button className="btn btn-primary" onClick={fetchAll} disabled={loading}>Refresh</button>
             <div className="grid">
               {loading && <p>Loading...</p>}
               {weathers.map(w => <WeatherCard key={w.id} weather={w} />)}
             </div>
+            <div className="controls">
+              <button className="btn btn-primary" onClick={fetchAll} disabled={loading}>Refresh</button>
+            </div>
           </>
         )}
       </main>
-      <footer className="footer">Fidenz Weather — Demo build. Data by OpenWeatherMap. Login required to view live data. See README for setup.</footer>
+      <footer className="footer">Weather API — Demo build. Data by OpenWeatherMap. Login required to view live data. See README for setup.</footer>
     </div>
   );
 }
