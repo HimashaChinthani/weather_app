@@ -13,7 +13,10 @@ export default function App(){
   async function fetchAll(){
     setLoading(true);
     try {
-      const token = await getAccessTokenSilently();
+      // Request an access token for the configured audience explicitly to avoid aud mismatches
+      const token = await getAccessTokenSilently({ authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE } });
+      // Dev-friendly debug: print token so you can paste it into jwt.io to inspect `aud` and `iss`
+      if (import.meta.env.DEV) console.log('DEBUG access token (paste to jwt.io):', token);
       const r = await axios.get(`${API_BASE}/api/weather/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
