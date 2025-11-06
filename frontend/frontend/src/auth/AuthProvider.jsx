@@ -12,13 +12,18 @@ const DevAuthContext = createContext(null);
 export function AuthProvider({ children }) {
   if (useAuth0Enabled) {
     return (
-      <Auth0Provider
-        domain={domain}
-        clientId={clientId}
-        authorizationParams={{ redirect_uri: baseUrl, audience, scope: 'openid profile email' }}
-      >
-        {children}
-      </Auth0Provider>
+     <Auth0Provider
+  domain={domain}
+  clientId={clientId}
+  authorizationParams={{
+    redirect_uri: `${window.location.origin}/callback`,
+    audience: audience,
+    scope: 'openid profile email'
+  }}
+>
+  {children}
+</Auth0Provider>
+
     );
   }
 

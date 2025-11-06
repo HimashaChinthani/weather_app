@@ -57,28 +57,40 @@ try {
   authMiddleware = null;
 }
 
-// Build a middleware that accepts a dev token or falls back to Auth0 middleware when configured.
-const devBypass = process.env.DEV_AUTH_BYPASS === 'true';
+// Safe auth middleware wrapper
+// - If Auth0 is configured (authMiddleware != null) we only delegate to express-jwt
+//   when the incoming Authorization header contains a token that looks like a JWT
+//   (three dot-separated base64url parts). If the token is missing or clearly not
+//   a JWT, return a clear 401 JSON error instead of letting express-jwt throw
+//   "jwt malformed".
+// - If Auth0 is not configured (authMiddleware == null), allow requests through
+//   so the server can be used without Auth0 in local development.
+const isLikelyJwt = (token) => {
+  if (!token || typeof token !== 'string') return false;
+  return /^([A-Za-z0-9-_]+)\.([A-Za-z0-9-_]+)\.([A-Za-z0-9-_]+)$/.test(token);
+};
+
 const authMiddlewareUsed = (req, res, next) => {
-  // Accept the mock frontend dev token so local dev works without Auth0.
-  const authHeader = req.headers && req.headers.authorization;
-  if (authHeader && typeof authHeader === 'string') {
-    const parts = authHeader.split(' ');
-    if (parts.length === 2 && parts[0] === 'Bearer' && parts[1] === 'dev-token') {
-      req.user = { sub: 'dev', email: 'dev@example.com' };
-      return next();
-    }
+  // If Auth0 JWT middleware isn't configured, allow through (developer choice)
+  if (!authMiddleware) return next();
+
+  const authHeader = (req.headers && req.headers.authorization) || '';
+  if (!authHeader) {
+    return res.status(401).json({ error: 'authorization_required', description: 'Authorization header required' });
   }
 
-  // If explicit DEV_AUTH_BYPASS env var set, inject a dev user.
-  if (devBypass) {
-    req.user = { sub: 'dev', email: 'dev@example.com' };
-    return next();
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    return res.status(401).json({ error: 'invalid_authorization_header', description: 'Expected "Authorization: Bearer <token>"' });
   }
 
-  // If the Auth0 middleware is configured, delegate to it; otherwise allow through.
-  if (authMiddleware) return authMiddleware(req, res, next);
-  return next();
+  const token = parts[1];
+  if (!isLikelyJwt(token)) {
+    return res.status(401).json({ error: 'invalid_token_format', description: 'Token is not a JWT' });
+  }
+
+  // Token looks like a JWT; delegate to express-jwt for full verification
+  return authMiddleware(req, res, next);
 };
 
 // Optional scope/role checker middleware. Enable by setting REQUIRE_SCOPE=true and
@@ -94,7 +106,7 @@ const requireScope = (scope) => (req, res, next) => {
 };
 
 // GET all cities weather (protected)
-router.get('/all', authMiddlewareUsed, async (req, res) => {
+router.get('/all', authMiddleware, async (req, res) => {
   try {
     const results = [];
     const promises = cityIds.map(async id => {
@@ -102,8 +114,8 @@ router.get('/all', authMiddlewareUsed, async (req, res) => {
       if (cached) return cached;
 
       let out;
-      // If we don't have an OpenWeather API key available, return a mock response using cities.json
-      if (!process.env.OPENWEATHER_API_KEY) {
+      // Always use mock data for development to avoid API key issues
+      if (!process.env.OPENWEATHER_API_KEY || process.env.USE_MOCK_DATA === 'true') {
         const info = cityMap[id] || {};
         const tempC = info.Temp ? Math.round(Number(info.Temp)) : null;
         out = {
@@ -155,7 +167,7 @@ router.get('/debug-auth', (req, res) => {
 });
 
 // GET single city (protected)
-router.get('/:id', authMiddlewareUsed, async (req, res) => {
+router.get('/:id', authMiddleware, async (req, res) => {
   const id = req.params.id;
   if (!id) return res.status(400).json({ error: 'City id required' });
 
